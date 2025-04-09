@@ -14,6 +14,7 @@ function App() {
   const [reservations, setReservations] = useState([]);
   const [userReservations, setUserReservations] = useState([]);
   const [brand, setBrand] = useState('');
+  const [brandsList, setBrandsList] = useState([]);
   const [selectedCar, setSelectedCar] = useState(null);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -42,7 +43,6 @@ function App() {
     fetchReservations();
   }, [brand]);
 
-  // ✅ Ajout : mise à jour des statuts des réservations utilisateur si connecté
   useEffect(() => {
     if (loggedInUser) {
       fetchUserReservations(loggedInUser.username);
@@ -52,6 +52,8 @@ function App() {
   const fetchCars = async () => {
     const data = await getCars(brand);
     setCars(data);
+    const uniqueBrands = [...new Set(data.map((car) => car.brand))];
+    setBrandsList(uniqueBrands);
   };
 
   const fetchReservations = async () => {
@@ -233,7 +235,18 @@ function App() {
         </div>
       )}
 
-      {/* Liste des voitures */}
+      {/* 🔍 Filtrage par marque */}
+      <div className="p-4">
+        <label className="block mb-2 font-medium">Filtrer par marque :</label>
+        <select value={brand} onChange={(e) => setBrand(e.target.value)} className="border p-2 rounded w-full max-w-xs">
+          <option value="">Toutes les marques</option>
+          {brandsList.map((b) => (
+            <option key={b} value={b}>{b}</option>
+          ))}
+        </select>
+      </div>
+
+      {/* 🛻 Liste des voitures */}
       <div className="flex flex-wrap p-4 gap-4">
         {cars.map((car) => (
           <div key={car.id} className="border p-4 w-64">
@@ -243,17 +256,14 @@ function App() {
             <p>Vitesse max : {car.max_speed} km/h</p>
             <p>Type : {car.type}</p>
             <p>Prix : {car.price_per_day} € / jour</p>
-            <button
-              onClick={() => setSelectedCar(car)}
-              className="bg-blue-500 text-white p-2 rounded w-full mt-2"
-            >
+            <button onClick={() => setSelectedCar(car)} className="bg-blue-500 text-white p-2 rounded w-full mt-2">
               📅 Réserver
             </button>
           </div>
         ))}
       </div>
 
-      {/* Modal de réservation */}
+      {/* 🗓️ Modal de réservation */}
       {selectedCar && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
           <div className="bg-white p-6 rounded w-96">
@@ -266,7 +276,7 @@ function App() {
         </div>
       )}
 
-      {/* Vos réservations */}
+      {/* 📋 Vos réservations */}
       {loggedInUser && userReservations.length > 0 && (
         <div className="p-4">
           <h2 className="text-xl font-bold mb-2">📋 Vos réservations</h2>
@@ -277,10 +287,7 @@ function App() {
                 <p><strong>Du</strong> {res.start_date} <strong>au</strong> {res.end_date}</p>
                 <p><strong>Prix total :</strong> {res.total_price} €</p>
                 <p><strong>Statut :</strong> {res.status}</p>
-                <button
-                  onClick={() => handleDeleteReservation(res.id)}
-                  className="bg-red-500 text-white px-3 py-1 mt-2 rounded"
-                >
+                <button onClick={() => handleDeleteReservation(res.id)} className="bg-red-500 text-white px-3 py-1 mt-2 rounded">
                   Supprimer
                 </button>
               </li>
